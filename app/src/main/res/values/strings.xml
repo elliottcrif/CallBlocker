@@ -1,0 +1,7 @@
+<resources>
+    <string name="app_name">CallBlocker</string>
+    <string name="add_to_blacklist">Add to BlackList</string>
+    <string name="show_blacklist">Show BlackList</string>
+    <string name="title_activity_add_black">AddBlack</string>
+    <string name="enter_number">Enter Phone Number</string>
+</resources>
