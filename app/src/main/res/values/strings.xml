@@ -4,4 +4,5 @@
     <string name="show_blacklist">Show BlackList</string>
     <string name="title_activity_add_black">AddBlack</string>
     <string name="enter_number">Enter Phone Number</string>
+    <string name="delete">delete</string>
 </resources>

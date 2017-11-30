@@ -8,6 +8,8 @@
 
     <ListView
         android:id="@+id/blackList"
+        android:choiceMode="singleChoice"
         android:layout_width="match_parent"
-        android:layout_height="match_parent" />
+        android:layout_height="match_parent"
+        android:listSelector="@drawable/selection_effect"/>
 </android.support.constraint.ConstraintLayout>
