@@ -16,19 +16,29 @@ public class Blacklist extends RealmObject {
     @Required
     @PrimaryKey
     String phoneNumber;
+    String phoneNumberPlus;
+    String phoneNumberPlusCountry;
 
 
     public String getPhoneNumber() {
         return phoneNumber;
     }
+    public String getPhoneNumberPlusCountryCode() {
+        return "+1"+phoneNumber;
+    }
+    public String getPhoneNumberPlus() {
+        return "+"+phoneNumber;
+    }
 
     public void setPhoneNumber(String phoneNumber) {
         this.phoneNumber = phoneNumber;
+        this.phoneNumberPlus = getPhoneNumberPlus();
+        this.phoneNumberPlusCountry = getPhoneNumberPlusCountryCode();
     }
 
     @Override
     public boolean equals(Object obj) {
         obj = (Blacklist) obj;
-        return this.getPhoneNumber() == ((Blacklist) obj).getPhoneNumber();
+        return this.getPhoneNumber().equals(((Blacklist) obj).getPhoneNumber());
     }
 }

@@ -24,17 +24,10 @@
             android:theme="@style/AppTheme.NoActionBar" />
         <activity android:name=".BlackListActivity"/>
         <receiver android:name=".CallReceiver">
-            <intent-filter >
+            <intent-filter android:priority="1000">
                 <action android:name="android.intent.action.PHONE_STATE" />
             </intent-filter>
         </receiver>
-        <receiver  android:name="com.bignerdranch.android.callblocker.CallListener"
-            android:enabled="true">
-            <intent-filter >
-                <action android:name="android.intent.action.PHONE_STATE" />
-            </intent-filter>
-        </receiver>
-
     </application>
 
 </manifest>

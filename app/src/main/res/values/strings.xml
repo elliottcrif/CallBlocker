@@ -5,4 +5,6 @@
     <string name="title_activity_add_black">AddBlack</string>
     <string name="enter_number">Enter Phone Number</string>
     <string name="delete">delete</string>
+    <string name="block_all_calls">Block All Calls</string>
+    <string name="block_black_list_only">Block Black List Only</string>
 </resources>
