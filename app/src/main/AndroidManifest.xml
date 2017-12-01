@@ -3,6 +3,7 @@
     package="com.bignerdranch.android.callblocker">
     <uses-permission android:name="android.permission.MODIFY_AUDIO_SETTINGS" />
     <uses-permission android:name="android.permission.READ_PHONE_STATE" />
+    <uses-permission android:name="android.permission.CALL_PHONE" />
     <application
         android:name=".CallBlockerApplication"
         android:icon="@mipmap/ic_launcher"
@@ -22,6 +23,11 @@
             android:label="@string/title_activity_add_black"
             android:theme="@style/AppTheme.NoActionBar" />
         <activity android:name=".BlackListActivity"/>
+        <receiver android:name=".CallReceiver">
+            <intent-filter >
+                <action android:name="android.intent.action.PHONE_STATE" />
+            </intent-filter>
+        </receiver>
         <receiver  android:name="com.bignerdranch.android.callblocker.CallListener"
             android:enabled="true">
             <intent-filter >

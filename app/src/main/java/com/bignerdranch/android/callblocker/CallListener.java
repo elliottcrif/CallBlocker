@@ -40,7 +40,7 @@ public class CallListener extends BroadcastReceiver {
 
             switch (state) {
                 case TelephonyManager.CALL_STATE_RINGING:
-                    Log.d(TAG, incomingNumber);
+
                     break;
             }
         }

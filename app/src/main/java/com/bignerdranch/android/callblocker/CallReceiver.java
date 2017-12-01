@@ -8,6 +8,9 @@ import android.util.Log;
 
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
+import java.util.List;
+
+import io.realm.Realm;
 
 
 /**
@@ -17,6 +20,7 @@ import java.lang.reflect.Method;
 public class CallReceiver extends BroadcastReceiver {
     private final String TAG = "CallReceiver";
     private String number;
+    public static List<Blacklist> blockList;
     @Override
     public void onReceive(Context context, Intent intent) {
         Log.d(TAG, "Received a Broadcast");
@@ -26,12 +30,15 @@ public class CallReceiver extends BroadcastReceiver {
             if (action.equals("android.intent.action.PHONE_STATE"))
                 // Fetch the number of incoming call
                 number = intent.getStringExtra(TelephonyManager.EXTRA_INCOMING_NUMBER);
+            Blacklist currNumber = Realm.getDefaultInstance().where(Blacklist.class).equalTo("phoneNumber", number).findFirst();
+            Log.d(TAG, currNumber.getPhoneNumber());
             Blacklist blacklist = new Blacklist();
             blacklist.setPhoneNumber(number);
+
             // Check, whether this is a member of "Black listed" phone numbers stored in the database
-            if(BlackListActivity.blockList.contains(blacklist)) {
+            if(currNumber.getPhoneNumber().equals(blacklist.getPhoneNumber())) {
                 // If yes, invoke the method
-                disconnectPhoneItelephony(context);
+                disconnectPhone(context);
             }
             else{
                 Log.d(TAG, "Not a Telephone Call");
@@ -42,7 +49,7 @@ public class CallReceiver extends BroadcastReceiver {
     // Method to disconnect phone automatically and programmatically
     // Keep this method as it is
     @SuppressWarnings({ "rawtypes", "unchecked" })
-    private void disconnectPhoneItelephony(Context context)
+    private void disconnectPhone(Context context)
     {
         TelephonyManager tm = (TelephonyManager) context
                 .getSystemService(Context.TELEPHONY_SERVICE);
@@ -60,10 +67,11 @@ public class CallReceiver extends BroadcastReceiver {
         } catch (IllegalAccessException e) {
             e.printStackTrace();
         } catch (InvocationTargetException e) {
-            e.printStackTrace();
+            System.out.println(e.getCause());
         } catch (ClassNotFoundException e) {
             e.printStackTrace();
         }
+        System.out.println("Call Blocked Successfully");
     }
     }
 

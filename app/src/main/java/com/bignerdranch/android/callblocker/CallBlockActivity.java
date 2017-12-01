@@ -15,6 +15,7 @@ public class CallBlockActivity extends AppCompatActivity {
     private Button showListButton;
     private Button addToListButton;
     public final static int MY_PERMISSIONS_REQUEST_READ_PHONE_STATE = 11;
+    public final static int MY_PERMISSIONS_REQUEST_CALL_PHONE_STATE = 12;
 
 
     @Override
@@ -49,6 +50,20 @@ public class CallBlockActivity extends AppCompatActivity {
                         MY_PERMISSIONS_REQUEST_READ_PHONE_STATE);
             }
     }
+        // Here, thisActivity is the current activity
+        if (ContextCompat.checkSelfPermission(getApplicationContext(),
+                Manifest.permission.CALL_PHONE)
+                != PackageManager.PERMISSION_GRANTED) {
+
+            // Should we show an explanation?
+            if (ActivityCompat.shouldShowRequestPermissionRationale(this,
+                    Manifest.permission.READ_CONTACTS)) {
+            } else {
+                ActivityCompat.requestPermissions(this,
+                        new String[]{Manifest.permission.READ_PHONE_STATE},
+                        MY_PERMISSIONS_REQUEST_CALL_PHONE_STATE);
+            }
+        }
 }
     @Override
     public void onRequestPermissionsResult(int requestCode,
@@ -62,6 +77,14 @@ public class CallBlockActivity extends AppCompatActivity {
                 } else {
                 }
                 return;
+            }
+            case MY_PERMISSIONS_REQUEST_CALL_PHONE_STATE: {
+                // If request is cancelled, the result arrays are empty.
+                if (grantResults.length > 0
+                        && grantResults[1] == PackageManager.PERMISSION_GRANTED) {
+
+                } else {
+                }
             }
         }
     }

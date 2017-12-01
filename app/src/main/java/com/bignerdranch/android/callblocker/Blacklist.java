@@ -13,18 +13,10 @@ import io.realm.annotations.Required;
 public class Blacklist extends RealmObject {
 
 
-    public long id;
     @Required
     @PrimaryKey
     String phoneNumber;
 
-    public long getId() {
-        return id;
-    }
-
-    public void setId(long id) {
-        this.id = id;
-    }
 
     public String getPhoneNumber() {
         return phoneNumber;
@@ -32,5 +24,11 @@ public class Blacklist extends RealmObject {
 
     public void setPhoneNumber(String phoneNumber) {
         this.phoneNumber = phoneNumber;
+    }
+
+    @Override
+    public boolean equals(Object obj) {
+        obj = (Blacklist) obj;
+        return this.getPhoneNumber() == ((Blacklist) obj).getPhoneNumber();
     }
 }

@@ -69,7 +69,6 @@ public class AddBlackActivity extends AppCompatActivity {
                 @Override
                 public void execute(Realm realm) {
                     Blacklist blacklist = new Blacklist();
-                    blacklist.setId(realm.where(Blacklist.class).findAll().size()+1);
                     blacklist.setPhoneNumber(phone_number_text_view.getText().toString());
                     realm.insert(blacklist);
                 }
