@@ -37,25 +37,7 @@ public class CallReceiver extends BroadcastReceiver {
                 if (CallBlockPreferences.getStoredBlockType(context).equals("blacklist")) {
                     // place holder for curr number
                     String currNumber = null;
-                    RealmResults<Blacklist> results = realm.where(Blacklist.class)
-                            .equalTo("phoneNumber", number)
-                            .or()
-                            .equalTo("phoneNumberPlus", number)
-                            .or()
-                            .equalTo("phoneNumberPlusCountry", number)
-                            .findAll();
-                    blockList = realm.copyFromRealm(results);
-                    for (Blacklist blackList : blockList) {
-                        String blackListNumber = blackList.getPhoneNumber();
-                        String blackListPlusCountry = blackList.getPhoneNumberPlusCountryCode();
-                        String blackListPlus = blackList.getPhoneNumberPlus();
-                        if (blackListNumber.equals(number)
-                                || blackListPlusCountry.equals(number)
-                                || blackListPlus.equals(number)) {
-                            currNumber = blackList.getPhoneNumber();
-                        }
-                    }
-                    realm.close();
+                    currNumber = searchRealm();
                     // Check, whether this is a member of "Black listed" phone numbers stored in the database
                     if (currNumber != null) {
                         // If yes, invoke the method
@@ -68,6 +50,30 @@ public class CallReceiver extends BroadcastReceiver {
                 }
         }
         }
+
+    private String searchRealm() {
+        String currNumber = null;
+        RealmResults<Blacklist> results = realm.where(Blacklist.class)
+                .equalTo("phoneNumber", number)
+                .or()
+                .equalTo("phoneNumberPlus", number)
+                .or()
+                .equalTo("phoneNumberPlusCountry", number)
+                .findAll();
+        blockList = realm.copyFromRealm(results);
+        for (Blacklist blackList : blockList) {
+            String blackListNumber = blackList.getPhoneNumber();
+            String blackListPlusCountry = blackList.getPhoneNumberPlusCountryCode();
+            String blackListPlus = blackList.getPhoneNumberPlus();
+            if (blackListNumber.equals(number)
+                    || blackListPlusCountry.equals(number)
+                    || blackListPlus.equals(number)) {
+                currNumber = blackList.getPhoneNumber();
+            }
+        }
+        realm.close();
+        return currNumber;
+    }
 
     // Method to disconnect phone automatically and programmatically
     // Keep this method as it is
@@ -84,7 +90,7 @@ public class CallReceiver extends BroadcastReceiver {
             c = Class.forName(telephonyService.getClass().getName()); // Get its class
             m = c.getDeclaredMethod("endCall"); // Get the "endCall()" method
             m.setAccessible(true); // Make it accessible
-            m.invoke(telephonyService); // invoke endCall()
+            m.invoke(telephonyService);// invoke endCall()
         } catch (NoSuchMethodException e) {
             e.printStackTrace();
         } catch (IllegalAccessException e) {
