@@ -1,7 +1,6 @@
 package com.android.internal.telephony;
 
-
-interface ITelephony {
+public interface ITelephony {
 
     boolean endCall();
 

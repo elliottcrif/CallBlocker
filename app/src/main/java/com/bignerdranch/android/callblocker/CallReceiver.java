@@ -12,6 +12,7 @@ import java.util.List;
 
 import io.realm.Realm;
 import io.realm.RealmResults;
+import com.android.internal.telephony.ITelephony;
 
 
 /**
@@ -80,24 +81,19 @@ public class CallReceiver extends BroadcastReceiver {
     @SuppressWarnings({ "rawtypes", "unchecked" })
     private void disconnectPhone(Context context)
     {
-        TelephonyManager tm = (TelephonyManager) context
-                .getSystemService(Context.TELEPHONY_SERVICE);
-        try {
-            Class c = Class.forName(tm.getClass().getName());
+        ITelephony telephonyService;
+        TelephonyManager telephony = (TelephonyManager)
+                context.getSystemService(Context.TELEPHONY_SERVICE);
+        try
+        {
+            Class c = Class.forName(telephony.getClass().getName());
             Method m = c.getDeclaredMethod("getITelephony");
             m.setAccessible(true);
-            Object telephonyService = m.invoke(tm); // Get the internal ITelephony object
-            c = Class.forName(telephonyService.getClass().getName()); // Get its class
-            m = c.getDeclaredMethod("endCall"); // Get the "endCall()" method
-            m.setAccessible(true); // Make it accessible
-            m.invoke(telephonyService);// invoke endCall()
-        } catch (NoSuchMethodException e) {
-            e.printStackTrace();
-        } catch (IllegalAccessException e) {
-            e.printStackTrace();
-        } catch (InvocationTargetException e) {
-            System.out.println(e.getCause());
-        } catch (ClassNotFoundException e) {
+            telephonyService = (ITelephony) m.invoke(telephony);
+            telephonyService.endCall();
+        }
+        catch (Exception e)
+        {
             e.printStackTrace();
         }
         System.out.println("Call Blocked Successfully");
