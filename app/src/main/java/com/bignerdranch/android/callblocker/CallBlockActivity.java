@@ -5,38 +5,69 @@ import android.content.Intent;
 import android.content.pm.PackageManager;
 import android.support.v4.app.ActivityCompat;
 import android.support.v4.content.ContextCompat;
+import android.support.v4.widget.DrawerLayout;
+import android.support.v7.app.ActionBarDrawerToggle;
 import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
 import android.util.Log;
+import android.view.Menu;
+import android.view.MenuInflater;
+import android.view.MenuItem;
 import android.view.View;
+import android.widget.AdapterView;
+import android.widget.ArrayAdapter;
 import android.widget.Button;
+import android.widget.ListView;
 import android.widget.RadioButton;
+
+import java.util.List;
+
+import io.realm.Realm;
+import io.realm.RealmResults;
 
 public class CallBlockActivity extends AppCompatActivity {
 
-    private Button showListButton;
-    private Button addToListButton;
+    private DrawerLayout mDrawerLayout;
+    private ListView mDrawerList;
+    private ActionBarDrawerToggle mDrawerToggle;
+    private String[] menuTitles;
+    private CharSequence mDrawerTitle;
+    private CharSequence mTitle;
+    private ListView blackList;
+    private int currClicked;
+
+    // object to query database
+    private Realm blackListDb;
+    // It holds the list of Blacklist objects fetched from Database
+    public static RealmResults<Blacklist> blockList;
     public final static int MY_PERMISSIONS_REQUEST_READ_PHONE_STATE = 11;
-    public final static int MY_PERMISSIONS_REQUEST_CALL_PHONE_STATE = 12;
     private static final String TAG = "CallBlockActivity";
 
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
-        setContentView(R.layout.activity_call_block);
-        addToListButton = (Button) findViewById(R.id.addToList);
-        addToListButton.setOnClickListener(new View.OnClickListener() {
+        setContentView(R.layout.activity_nav_drawer);
+        mTitle = mDrawerTitle = getTitle();
+        menuTitles = getResources().getStringArray(R.array.menu_items);
+        mDrawerLayout = (DrawerLayout) findViewById(R.id.drawer_layout);
+        mDrawerList = (ListView) findViewById(R.id.left_drawer);
+        mDrawerList.setAdapter(new ArrayAdapter<String>(this,
+                R.layout.drawer_list_item, menuTitles));
+        mDrawerList.setOnItemClickListener(new DrawerItemClickListener());
+
+
+        blackList = (ListView) findViewById(R.id.blackList);
+        blackListDb = Realm.getDefaultInstance();
+        blockList = blackListDb.where(Blacklist.class).findAll();
+        //Now, link the  CustomArrayAdapter with the ListView
+        blackList.setAdapter(new BlackListAdapter(this, blockList));
+        blackList.setOnItemClickListener(new AdapterView.OnItemClickListener() {
             @Override
-            public void onClick(View view) {
-                startActivity(new Intent(getApplicationContext(), AddBlackActivity.class));
-            }
-        });
-        showListButton = (Button) findViewById(R.id.showList);
-        showListButton.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View view) {
-                startActivity(new Intent(getApplicationContext(), BlackListActivity.class));
+            public void onItemClick(AdapterView<?> adapterView, View view, int i, long l) {
+                currClicked = i;
+                view.setSelected(true);
+                Log.d(TAG, Integer.toString(i));
             }
         });
         // Here, thisActivity is the current activity
@@ -56,6 +87,46 @@ public class CallBlockActivity extends AppCompatActivity {
             }
     }
 }
+
+    @Override
+    public boolean onCreateOptionsMenu(Menu menu) {
+        MenuInflater inflater = getMenuInflater();
+        inflater.inflate(R.menu.activity_nav_drawer, menu);
+        return super.onCreateOptionsMenu(menu);
+
+    }
+
+    @Override
+    public boolean onOptionsItemSelected(MenuItem item) {
+        switch(item.getItemId()) {
+            case R.id.open_menu_item:
+                mDrawerLayout.openDrawer(mDrawerList);
+                return true;
+            default:
+                return super.onOptionsItemSelected(item);
+        }
+    }
+
+    /* The click listner for ListView in the navigation drawer */
+    private class DrawerItemClickListener implements ListView.OnItemClickListener {
+        @Override
+        public void onItemClick(AdapterView<?> parent, View view, int position, long id) {
+            selectItem(position);
+        }
+    }
+
+    private void selectItem(int position) {
+        // update the main content by replacing fragments
+
+    }
+
+    @Override
+    public void setTitle(CharSequence title) {
+        mTitle = title;
+        getActionBar().setTitle(mTitle);
+    }
+
+
     @Override
     public void onRequestPermissionsResult(int requestCode,
                                            String permissions[], int[] grantResults) {

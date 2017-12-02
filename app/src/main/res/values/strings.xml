@@ -7,4 +7,12 @@
     <string name="delete">delete</string>
     <string name="block_all_calls">Block All Calls</string>
     <string name="block_black_list_only">Block Black List Only</string>
+    <string name="call_block_settings">Call Block Settings</string>
+    <string name="cancel_all_blocks">Cancel All Blocks</string>
+    <string name="settings">Settings</string>
+    <string name="edit">Edit</string>
+    <string-array name="menu_items">
+        <item>Home</item>
+        <item>Settings</item>
+    </string-array>
 </resources>

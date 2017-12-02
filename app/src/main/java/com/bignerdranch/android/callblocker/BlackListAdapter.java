@@ -24,13 +24,13 @@ import io.realm.RealmBaseAdapter;
 public class BlackListAdapter extends RealmBaseAdapter<Blacklist> implements ListAdapter {
 
     private LayoutInflater inflater;
-    private Activity activity;
+    private CallBlockActivity activity;
 
 
     private static class ViewHolder {
         TextView phoneNumber;
     }
-    BlackListAdapter(Activity activity, OrderedRealmCollection<Blacklist> data) {
+    BlackListAdapter(CallBlockActivity activity, OrderedRealmCollection<Blacklist> data) {
         super(data);
         this.activity = activity;
     }
