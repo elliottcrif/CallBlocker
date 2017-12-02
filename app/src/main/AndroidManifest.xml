@@ -21,8 +21,12 @@
         <activity
             android:name=".AddBlackActivity"
             android:label="@string/title_activity_add_black"
-            android:theme="@style/AppTheme.NoActionBar" />
+            android:theme="@style/AppTheme.NoActionBar"
+            android:parentActivityName=".CallBlockActivity"/>
         <activity android:name=".BlackListActivity"/>
+        <activity android:name=".CallBlockSettingsActivity"
+            android:parentActivityName=".CallBlockActivity"/>
+
         <receiver android:name=".CallReceiver">
             <intent-filter android:priority="999">
                 <action android:name="android.intent.action.PHONE_STATE" />

@@ -3,12 +3,14 @@ package com.bignerdranch.android.callblocker;
 import android.Manifest;
 import android.content.Intent;
 import android.content.pm.PackageManager;
+import android.content.res.Configuration;
 import android.support.v4.app.ActivityCompat;
 import android.support.v4.content.ContextCompat;
 import android.support.v4.widget.DrawerLayout;
-import android.support.v7.app.ActionBarDrawerToggle;
+import android.support.v4.app.ActionBarDrawerToggle;
 import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
+import android.support.v7.widget.Toolbar;
 import android.util.Log;
 import android.view.Menu;
 import android.view.MenuInflater;
@@ -19,11 +21,14 @@ import android.widget.ArrayAdapter;
 import android.widget.Button;
 import android.widget.ListView;
 import android.widget.RadioButton;
+import android.widget.Toast;
 
 import java.util.List;
 
 import io.realm.Realm;
 import io.realm.RealmResults;
+
+import static io.realm.RealmObject.deleteFromRealm;
 
 public class CallBlockActivity extends AppCompatActivity {
 
@@ -55,7 +60,25 @@ public class CallBlockActivity extends AppCompatActivity {
         mDrawerList.setAdapter(new ArrayAdapter<String>(this,
                 R.layout.drawer_list_item, menuTitles));
         mDrawerList.setOnItemClickListener(new DrawerItemClickListener());
+        // ActionBarDrawerToggle ties together the the proper interactions
+        // between the sliding drawer and the action bar app icon
+        mDrawerToggle = new ActionBarDrawerToggle(
+                this,                  /* host Activity */
+                mDrawerLayout,         /* DrawerLayout object */
+                R.drawable.ic_drawer,  /* nav drawer image to replace 'Up' caret */
+                R.string.open_drawer,  /* "open drawer" description for accessibility */
+                R.string.close_drawer  /* "close drawer" description for accessibility */
+        ) {
+            public void onDrawerClosed(View view) {
+                getActionBar().setTitle(mTitle);
+                invalidateOptionsMenu(); // creates call to onPrepareOptionsMenu()
+            }
 
+            public void onDrawerOpened(View drawerView) {
+                getActionBar().setTitle(mDrawerTitle);
+                invalidateOptionsMenu(); // creates call to onPrepareOptionsMenu()
+            }
+        };
 
         blackList = (ListView) findViewById(R.id.blackList);
         blackListDb = Realm.getDefaultInstance();
@@ -99,9 +122,19 @@ public class CallBlockActivity extends AppCompatActivity {
     @Override
     public boolean onOptionsItemSelected(MenuItem item) {
         switch(item.getItemId()) {
-            case R.id.open_menu_item:
-                mDrawerLayout.openDrawer(mDrawerList);
+            case R.id.delete_menu_item:
+                Toast.makeText(getBaseContext(), "Clicked", Toast.LENGTH_LONG).show();
+                BlackListAdapter blackListAdapter = (BlackListAdapter) blackList.getAdapter();
+                Blacklist blacklist = blackListAdapter.getItem(currClicked);
+                if (blacklist != null) {
+                    Log.d(TAG, blacklist.getPhoneNumber());
+                    deleteBlackList(blacklist.getPhoneNumber());
+
+                }
                 return true;
+            case R.id.add_menu_item:
+                Intent i = new Intent(this, AddBlackActivity.class);
+                startActivity(i);
             default:
                 return super.onOptionsItemSelected(item);
         }
@@ -111,13 +144,13 @@ public class CallBlockActivity extends AppCompatActivity {
     private class DrawerItemClickListener implements ListView.OnItemClickListener {
         @Override
         public void onItemClick(AdapterView<?> parent, View view, int position, long id) {
-            selectItem(position);
+           selectItem(position);
         }
     }
 
     private void selectItem(int position) {
-        // update the main content by replacing fragments
-
+        Intent i = new Intent(this, CallBlockSettingsActivity.class);
+        startActivity(i);
     }
 
     @Override
@@ -125,6 +158,17 @@ public class CallBlockActivity extends AppCompatActivity {
         mTitle = title;
         getActionBar().setTitle(mTitle);
     }
+    private void deleteBlackList(final String phoneNumber) {
+        blackListDb.executeTransactionAsync(new Realm.Transaction() {
+            @Override
+            public void execute(Realm realm) {
+                realm.where(Blacklist.class).equalTo("phoneNumber", phoneNumber)
+                        .findFirst()
+                        .deleteFromRealm();
+            }
+        });
+    }
+
 
 
     @Override
@@ -143,22 +187,17 @@ public class CallBlockActivity extends AppCompatActivity {
             }
         }
     }
-    public void onRadioButtonClicked(View view) {
-        // Is the button now checked?
-        boolean checked = ((RadioButton) view).isChecked();
+    @Override
+    protected void onPostCreate(Bundle savedInstanceState)
+    {
+        super.onPostCreate(savedInstanceState);
+        mDrawerToggle.syncState();
+    }
 
-        // Check which radio button was clicked
-        switch(view.getId()) {
-            case R.id.blockAllCallsToggle:
-                if (checked)
-                    CallBlockPreferences.setStoredBlockType(this, "all");
-                    Log.d(TAG, "all");
-                    break;
-            case R.id.blockBlackListToggle:
-                if (checked)
-                    CallBlockPreferences.setStoredBlockType(this, "blacklist");
-                    Log.d(TAG, "blacklist will be blocked");
-                    break;
-        }
+    @Override
+    public void onConfigurationChanged(Configuration newConfig)
+    {
+        super.onConfigurationChanged(newConfig);
+        mDrawerToggle.onConfigurationChanged(newConfig);
     }
 }
