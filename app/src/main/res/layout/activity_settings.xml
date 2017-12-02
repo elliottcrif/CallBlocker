@@ -1,0 +1,38 @@
+<?xml version="1.0" encoding="utf-8"?>
+<RadioGroup android:id="@+id/radioGroup"
+    android:layout_width="fill_parent"
+    android:layout_height="fill_parent"
+    android:layout_marginEnd="8dp"
+    android:layout_marginStart="8dp"
+    xmlns:android="http://schemas.android.com/apk/res/android">
+    <TextView
+        android:id="@+id/callBlockSettingsTextView"
+        android:layout_width="205dp"
+        android:layout_height="37dp"
+        android:layout_marginBottom="8dp"
+        android:layout_marginEnd="8dp"
+        android:layout_marginStart="8dp"
+        android:layout_marginTop="8dp"
+        android:text="@string/call_block_settings"
+        android:textSize="24sp" />
+        <RadioButton
+            android:id="@+id/blockAllCallsToggle"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_weight="1"
+            android:text="@string/block_all_calls" />
+
+        <RadioButton
+            android:id="@+id/blockBlackListToggle"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_weight="1"
+            android:text="@string/block_black_list_only" />
+
+        <RadioButton
+            android:id="@+id/blockCancelToggle"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_weight="1"
+            android:text="@string/cancel_all_blocks" />
+    </RadioGroup>
