@@ -24,8 +24,6 @@
             android:theme="@style/AppTheme.NoActionBar"
             android:parentActivityName=".CallBlockActivity"/>
         <activity android:name=".BlackListActivity"/>
-        <activity android:name=".CallBlockSettingsActivity"
-            android:parentActivityName=".CallBlockActivity"/>
 
         <receiver android:name=".CallReceiver">
             <intent-filter android:priority="999">

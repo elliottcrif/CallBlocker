@@ -1,10 +1,12 @@
 package com.bignerdranch.android.callblocker;
 
 import android.Manifest;
+import android.app.Dialog;
 import android.content.Intent;
 import android.content.pm.PackageManager;
 import android.content.res.Configuration;
 import android.support.v4.app.ActivityCompat;
+import android.support.v4.app.DialogFragment;
 import android.support.v4.content.ContextCompat;
 import android.support.v4.widget.DrawerLayout;
 import android.support.v4.app.ActionBarDrawerToggle;
@@ -19,6 +21,7 @@ import android.view.View;
 import android.widget.AdapterView;
 import android.widget.ArrayAdapter;
 import android.widget.Button;
+import android.widget.EditText;
 import android.widget.ListView;
 import android.widget.RadioButton;
 import android.widget.Toast;
@@ -28,9 +31,10 @@ import java.util.List;
 import io.realm.Realm;
 import io.realm.RealmResults;
 
+import static android.content.ContentValues.TAG;
 import static io.realm.RealmObject.deleteFromRealm;
 
-public class CallBlockActivity extends AppCompatActivity {
+public class CallBlockActivity extends AppCompatActivity implements AddNumberDialog.AddNumberDialogListener {
 
     private DrawerLayout mDrawerLayout;
     private ListView mDrawerList;
@@ -133,24 +137,46 @@ public class CallBlockActivity extends AppCompatActivity {
                 }
                 return true;
             case R.id.add_menu_item:
-                Intent i = new Intent(this, AddBlackActivity.class);
-                startActivity(i);
+                DialogFragment newFragment = new AddNumberDialog();
+                newFragment.show(getSupportFragmentManager(), "number");
             default:
                 return super.onOptionsItemSelected(item);
         }
     }
 
-    /* The click listner for ListView in the navigation drawer */
+    @Override
+    public void onDialogPositiveClick(DialogFragment dialog) {
+        Dialog addDialog = dialog.getDialog();
+        // grab the edit text
+        EditText phone_number_text_view = addDialog.findViewById(R.id.phone_number_text_view);
+        // grab phone number
+        String phoneNumber = phone_number_text_view.getText().toString();
+        // if number checks out then add to list
+        // TODO CHECK IF NUMBER IS IN REALM
+        if (phoneNumber.length() == 10) {
+            addToRealm(phoneNumber);
+        } else {
+            // TODO CREATE DIALOG THAT ASKS TO TRY AGAIN
+            Toast.makeText(this, "Phone Number is Invalid", Toast.LENGTH_LONG).show();
+        }
+
+    }
+    @Override
+    public void onDialogNegativeClick(DialogFragment dialog) {
+
+    }
+    /* The click listener for ListView in the navigation drawer */
     private class DrawerItemClickListener implements ListView.OnItemClickListener {
         @Override
         public void onItemClick(AdapterView<?> parent, View view, int position, long id) {
            selectItem(position);
+           onRadioButtonClicked(view);
         }
     }
 
     private void selectItem(int position) {
-        Intent i = new Intent(this, CallBlockSettingsActivity.class);
-        startActivity(i);
+        RadioButton radioButton = (RadioButton) mDrawerList.getAdapter().getItem(position);
+        Log.d(TAG, radioButton.getText().toString());
     }
 
     @Override
@@ -158,6 +184,26 @@ public class CallBlockActivity extends AppCompatActivity {
         mTitle = title;
         getActionBar().setTitle(mTitle);
     }
+
+    /**
+     * Adds a phoneNumber to the database
+     * @param phoneNumber
+     */
+    private void addToRealm(final String phoneNumber) {
+        blackListDb.executeTransactionAsync(new Realm.Transaction() {
+            @Override
+            public void execute(Realm realm) {
+                Blacklist blacklist = new Blacklist();
+                blacklist.setPhoneNumber(phoneNumber);
+                realm.insert(blacklist);
+            }
+        });
+    }
+
+    /**
+     * Deletes a number from the dataBase using Realm
+     * @param phoneNumber
+     */
     private void deleteBlackList(final String phoneNumber) {
         blackListDb.executeTransactionAsync(new Realm.Transaction() {
             @Override
@@ -199,5 +245,32 @@ public class CallBlockActivity extends AppCompatActivity {
     {
         super.onConfigurationChanged(newConfig);
         mDrawerToggle.onConfigurationChanged(newConfig);
+    }
+    /**
+     * This Handles the event when the user toggles the radio buttons
+     * @param view
+     */
+    public void onRadioButtonClicked(View view) {
+        // Is the button now checked?
+        boolean checked = ((RadioButton) view).isChecked();
+
+        // Check which radio button was clicked
+        switch(view.getId()) {
+            case R.id.blockAllCallsToggle:
+                if (checked)
+                    CallBlockPreferences.setStoredBlockType(this, "all");
+                Log.d(TAG, "all");
+                break;
+            case R.id.blockBlackListToggle:
+                if (checked)
+                    CallBlockPreferences.setStoredBlockType(this, "blacklist");
+                Log.d(TAG, "blacklist will be blocked");
+                break;
+            case R.id.blockCancelToggle:
+                if (checked)
+                    CallBlockPreferences.setStoredBlockType(this, "cancel");
+                Log.d(TAG, "blacklist will be blocked");
+                break;
+        }
     }
 }

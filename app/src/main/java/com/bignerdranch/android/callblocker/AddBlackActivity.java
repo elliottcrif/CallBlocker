@@ -50,35 +50,16 @@ public class AddBlackActivity extends AppCompatActivity {
 
             }
         });
-        addToBlackListBtn = (Button) findViewById(R.id.addBlackbutton);
-        addToBlackListBtn.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View view) {
-                addToRealm();
-                showDialog();
-            }
-        });
+//        addToBlackListBtn = (Button) findViewById(R.id.addBlackbutton);
+//        addToBlackListBtn.setOnClickListener(new View.OnClickListener() {
+//            @Override
+//            public void onClick(View view) {
+//                addToRealm();
+//                showDialog();
+//            }
+//        });
 
 
-    }
-
-    private void addToRealm() {
-        try { // I could use try-with-resources here
-            realm = Realm.getDefaultInstance();
-            realm.executeTransaction(new Realm.Transaction() {
-                @Override
-                public void execute(Realm realm) {
-                    Blacklist blacklist = new Blacklist();
-                    blacklist.setPhoneNumber(phone_number_text_view.getText().toString());
-                    realm.insert(blacklist);
-                }
-
-            });
-        } finally {
-            if(realm != null) {
-                realm.close();
-            }
-        }
     }
     private void showDialog()
     {
