@@ -1,7 +1,9 @@
 package com.bignerdranch.android.callblocker;
 
 import android.Manifest;
+import android.app.AlertDialog;
 import android.app.Dialog;
+import android.content.DialogInterface;
 import android.content.Intent;
 import android.content.pm.PackageManager;
 import android.content.res.Configuration;
@@ -155,6 +157,7 @@ public class CallBlockActivity extends AppCompatActivity implements AddNumberDia
         // TODO CHECK IF NUMBER IS IN REALM
         if (phoneNumber.length() == 10) {
             addToRealm(phoneNumber);
+            showDialog();
         } else {
             // TODO CREATE DIALOG THAT ASKS TO TRY AGAIN
             Toast.makeText(this, "Phone Number is Invalid", Toast.LENGTH_LONG).show();
@@ -253,24 +256,55 @@ public class CallBlockActivity extends AppCompatActivity implements AddNumberDia
     public void onRadioButtonClicked(View view) {
         // Is the button now checked?
         boolean checked = ((RadioButton) view).isChecked();
-
         // Check which radio button was clicked
-        switch(view.getId()) {
-            case R.id.blockAllCallsToggle:
+        switch(((RadioButton) view).getText().toString()) {
+            case "Block All Calls":
                 if (checked)
                     CallBlockPreferences.setStoredBlockType(this, "all");
                 Log.d(TAG, "all");
                 break;
-            case R.id.blockBlackListToggle:
+            case "Block Blacklisted Numbers":
                 if (checked)
                     CallBlockPreferences.setStoredBlockType(this, "blacklist");
                 Log.d(TAG, "blacklist will be blocked");
                 break;
-            case R.id.blockCancelToggle:
+            case "Block All Unsaved Contacts":
                 if (checked)
                     CallBlockPreferences.setStoredBlockType(this, "cancel");
                 Log.d(TAG, "blacklist will be blocked");
                 break;
         }
+    }
+    private void showDialog()
+    {
+        // After submission, Dialog opens up with "Success" message. So, build the AlartBox first
+        final AlertDialog.Builder alertDialogBuilder = new AlertDialog.Builder(this);
+
+        // Set the appropriate message into it.
+        alertDialogBuilder.setMessage("Phone Number added to blacklist successfully");
+
+        // Add a positive button and it's action. In our case action would be, just hide the dialog box ,
+        // and erase the user inputs.
+        alertDialogBuilder.setPositiveButton("Add Another",
+                new DialogInterface.OnClickListener() {
+
+                    @Override
+                    public void onClick(DialogInterface arg0, int arg1) {
+
+                    }
+                });
+
+        // Add a negative button and it's action. In our case, close the current screen
+        alertDialogBuilder.setNegativeButton("Cancel",
+                new DialogInterface.OnClickListener() {
+                    @Override
+                    public void onClick(DialogInterface dialog, int which) {
+                        finish();
+                    }
+                });
+
+        // Now, create the Dialog and show it.
+        final AlertDialog alertDialog = alertDialogBuilder.create();
+        alertDialog.show();
     }
 }
