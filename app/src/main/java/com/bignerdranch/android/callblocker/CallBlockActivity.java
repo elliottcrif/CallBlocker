@@ -7,6 +7,7 @@ import android.content.DialogInterface;
 import android.content.Intent;
 import android.content.pm.PackageManager;
 import android.content.res.Configuration;
+import android.provider.MediaStore;
 import android.support.v4.app.ActivityCompat;
 import android.support.v4.app.DialogFragment;
 import android.support.v4.content.ContextCompat;
@@ -20,10 +21,12 @@ import android.view.Menu;
 import android.view.MenuInflater;
 import android.view.MenuItem;
 import android.view.View;
+import android.view.ViewGroup;
 import android.widget.AdapterView;
 import android.widget.ArrayAdapter;
 import android.widget.Button;
 import android.widget.EditText;
+import android.widget.ListAdapter;
 import android.widget.ListView;
 import android.widget.RadioButton;
 import android.widget.Toast;
@@ -36,7 +39,9 @@ import io.realm.RealmResults;
 import static android.content.ContentValues.TAG;
 import static io.realm.RealmObject.deleteFromRealm;
 
-public class CallBlockActivity extends AppCompatActivity implements AddNumberDialog.AddNumberDialogListener {
+public class CallBlockActivity extends AppCompatActivity
+        implements AddNumberDialog.AddNumberDialogListener,
+                    EditNumberDialog.EditNumberDialogListener {
 
     private DrawerLayout mDrawerLayout;
     private ListView mDrawerList;
@@ -46,9 +51,11 @@ public class CallBlockActivity extends AppCompatActivity implements AddNumberDia
     private CharSequence mTitle;
     private ListView blackList;
     private int currClicked;
-
+    private int currCount;
     // object to query database
     private Realm blackListDb;
+    private RadioButton listRadioButton = null;
+    int listIndex = -1;
     // It holds the list of Blacklist objects fetched from Database
     public static RealmResults<Blacklist> blockList;
     public final static int MY_PERMISSIONS_REQUEST_READ_PHONE_STATE = 11;
@@ -99,6 +106,17 @@ public class CallBlockActivity extends AppCompatActivity implements AddNumberDia
                 Log.d(TAG, Integer.toString(i));
             }
         });
+        blackList.setOnItemLongClickListener(new AdapterView.OnItemLongClickListener() {
+            @Override
+            public boolean onItemLongClick(AdapterView<?> adapterView, View view, int i, long l) {
+                currClicked = i;
+                showEditDialog();
+                return false;
+            }
+        });
+        ListAdapter blackListAdapter = blackList.getAdapter();
+        currCount = blackListAdapter.getCount();
+        Log.d(TAG, currCount+"");
         // Here, thisActivity is the current activity
         if (ContextCompat.checkSelfPermission(getApplicationContext(),
                 Manifest.permission.READ_PHONE_STATE) + ContextCompat
@@ -148,6 +166,7 @@ public class CallBlockActivity extends AppCompatActivity implements AddNumberDia
 
     @Override
     public void onDialogPositiveClick(DialogFragment dialog) {
+
         Dialog addDialog = dialog.getDialog();
         // grab the edit text
         EditText phone_number_text_view = addDialog.findViewById(R.id.phone_number_text_view);
@@ -168,6 +187,45 @@ public class CallBlockActivity extends AppCompatActivity implements AddNumberDia
     public void onDialogNegativeClick(DialogFragment dialog) {
 
     }
+
+    /**
+     * Edit dialog
+     * @param dialog
+     */
+    @Override
+    public void onEditDialogPositiveClick(DialogFragment dialog) {
+        // Dialog
+        Dialog editDialog = dialog.getDialog();
+        // grab the edit text
+        EditText phone_number_text_view = editDialog.findViewById(R.id.phone_number_text_view);
+        // grab the new phone number
+        String newNumber = phone_number_text_view.getText().toString();
+
+        // grab the old number
+        BlackListAdapter blackListAdapter =  (BlackListAdapter) blackList.getAdapter();
+        Blacklist blacklist = blackListAdapter.getItem(currClicked);
+        String currNumber = "";
+        if (blacklist != null) {
+            currNumber = blacklist.getPhoneNumber();
+        }
+        // if number checks out then add to list
+        if (newNumber.length() == 10 && !currNumber.equals("")) {
+            editBlackList(newNumber);
+        } else {
+            // TODO CREATE DIALOG THAT ASKS TO TRY AGAIN
+            Toast.makeText(this, "Phone Number is Invalid", Toast.LENGTH_LONG).show();
+        }
+    }
+
+    /**
+     * Edit dialog
+     * @param dialog
+     */
+    @Override
+    public void onEditDialogNegativeClick(DialogFragment dialog) {
+
+    }
+
     /* The click listener for ListView in the navigation drawer */
     private class DrawerItemClickListener implements ListView.OnItemClickListener {
         @Override
@@ -197,8 +255,10 @@ public class CallBlockActivity extends AppCompatActivity implements AddNumberDia
             @Override
             public void execute(Realm realm) {
                 Blacklist blacklist = new Blacklist();
+                blacklist.setId(currCount+"");
                 blacklist.setPhoneNumber(phoneNumber);
                 realm.insert(blacklist);
+                currCount++;
             }
         });
     }
@@ -211,13 +271,26 @@ public class CallBlockActivity extends AppCompatActivity implements AddNumberDia
         blackListDb.executeTransactionAsync(new Realm.Transaction() {
             @Override
             public void execute(Realm realm) {
-                realm.where(Blacklist.class).equalTo("phoneNumber", phoneNumber)
+                realm.where(Blacklist.class).equalTo("id", currClicked+"")
                         .findFirst()
                         .deleteFromRealm();
+                currCount--;
             }
         });
     }
-
+    void editBlackList(final String newNumber) {
+        blackListDb.executeTransactionAsync(new Realm.Transaction() {
+            @Override
+            public void execute(Realm realm) {
+                Blacklist blacklist = realm.where(Blacklist.class)
+                        .equalTo("id", currClicked+"")
+                        .findFirst();
+                if (blacklist != null) {
+                    blacklist.setPhoneNumber(newNumber);
+                }
+            }
+        });
+    }
 
 
     @Override
@@ -259,18 +332,15 @@ public class CallBlockActivity extends AppCompatActivity implements AddNumberDia
         // Check which radio button was clicked
         switch(((RadioButton) view).getText().toString()) {
             case "Block All Calls":
-                if (checked)
-                    CallBlockPreferences.setStoredBlockType(this, "all");
+                CallBlockPreferences.setStoredBlockType(this, "all");
                 Log.d(TAG, "all");
                 break;
             case "Block Blacklisted Numbers":
-                if (checked)
-                    CallBlockPreferences.setStoredBlockType(this, "blacklist");
+                CallBlockPreferences.setStoredBlockType(this, "blacklist");
                 Log.d(TAG, "blacklist will be blocked");
                 break;
             case "Block All Unsaved Contacts":
-                if (checked)
-                    CallBlockPreferences.setStoredBlockType(this, "cancel");
+                CallBlockPreferences.setStoredBlockType(this, "cancel");
                 Log.d(TAG, "blacklist will be blocked");
                 break;
         }
@@ -290,7 +360,8 @@ public class CallBlockActivity extends AppCompatActivity implements AddNumberDia
 
                     @Override
                     public void onClick(DialogInterface arg0, int arg1) {
-
+                        DialogFragment newFragment = new AddNumberDialog();
+                        newFragment.show(getSupportFragmentManager(), "number");
                     }
                 });
 
@@ -299,7 +370,40 @@ public class CallBlockActivity extends AppCompatActivity implements AddNumberDia
                 new DialogInterface.OnClickListener() {
                     @Override
                     public void onClick(DialogInterface dialog, int which) {
-                        finish();
+
+                    }
+                });
+
+        // Now, create the Dialog and show it.
+        final AlertDialog alertDialog = alertDialogBuilder.create();
+        alertDialog.show();
+    }
+    private void showEditDialog()
+    {
+        // After submission, Dialog opens up with "Success" message. So, build the AlartBox first
+        final AlertDialog.Builder alertDialogBuilder = new AlertDialog.Builder(this);
+
+        // Set the appropriate message into it.
+        alertDialogBuilder.setMessage("Do you want to edit this number?");
+
+        // Add a positive button and it's action. In our case action would be, just hide the dialog box ,
+        // and erase the user inputs.
+        alertDialogBuilder.setPositiveButton("Edit Number",
+                new DialogInterface.OnClickListener() {
+
+                    @Override
+                    public void onClick(DialogInterface arg0, int arg1) {
+                        DialogFragment newFragment = new EditNumberDialog();
+                        newFragment.show(getSupportFragmentManager(), "number");
+                    }
+                });
+
+        // Add a negative button and it's action. In our case, close the current screen
+        alertDialogBuilder.setNegativeButton("Cancel",
+                new DialogInterface.OnClickListener() {
+                    @Override
+                    public void onClick(DialogInterface dialog, int which) {
+
                     }
                 });
 
