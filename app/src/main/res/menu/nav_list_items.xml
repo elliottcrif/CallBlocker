@@ -1,0 +1,25 @@
+<?xml version="1.0" encoding="utf-8"?>
+<menu xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto">
+    <item
+        android:id="@+id/settingsTitle"
+        android:checkable="false"
+        android:icon="@android:drawable/ic_menu_manage"
+        app:showAsAction="ifRoom"
+        android:title="@string/settings" />
+    <group
+        android:checkableBehavior="single">
+        <item
+            android:id="@+id/blockBlackListToggle"
+            android:title="@string/block_black_list_only"/>
+        <item
+            android:id="@+id/blockUnsavedToggle"
+            android:title="@string/block_unsaved_contacts_only"/>
+        <item
+            android:id="@+id/blockAllCallsToggle"
+            android:title="@string/block_all_calls"/>
+        <item
+            android:id="@+id/blockCancelToggle"
+            android:title="@string/cancel_all_blocks"/>
+    </group>
+</menu>

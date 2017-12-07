@@ -1,5 +1,9 @@
 package com.bignerdranch.android.callblocker;
 
+import android.content.ContentResolver;
+import android.database.Cursor;
+import android.os.Build;
+import android.provider.ContactsContract;
 import android.Manifest;
 import android.app.AlertDialog;
 import android.app.Dialog;
@@ -8,9 +12,12 @@ import android.content.Intent;
 import android.content.pm.PackageManager;
 import android.content.res.Configuration;
 import android.provider.MediaStore;
+import android.support.annotation.NonNull;
+import android.support.design.widget.NavigationView;
 import android.support.v4.app.ActivityCompat;
 import android.support.v4.app.DialogFragment;
 import android.support.v4.content.ContextCompat;
+import android.support.v4.view.GravityCompat;
 import android.support.v4.widget.DrawerLayout;
 import android.support.v4.app.ActionBarDrawerToggle;
 import android.support.v7.app.AppCompatActivity;
@@ -31,6 +38,7 @@ import android.widget.ListView;
 import android.widget.RadioButton;
 import android.widget.Toast;
 
+import java.util.ArrayList;
 import java.util.List;
 
 import io.realm.Realm;
@@ -41,11 +49,12 @@ import static io.realm.RealmObject.deleteFromRealm;
 
 public class CallBlockActivity extends AppCompatActivity
         implements AddNumberDialog.AddNumberDialogListener,
-                    EditNumberDialog.EditNumberDialogListener {
+                    EditNumberDialog.EditNumberDialogListener,
+                    NavigationView.OnNavigationItemSelectedListener{
 
     private DrawerLayout mDrawerLayout;
-    private ListView mDrawerList;
     private ActionBarDrawerToggle mDrawerToggle;
+    private NavigationView mNavView;
     private String[] menuTitles;
     private CharSequence mDrawerTitle;
     private CharSequence mTitle;
@@ -54,10 +63,9 @@ public class CallBlockActivity extends AppCompatActivity
     private int currCount;
     // object to query database
     private Realm blackListDb;
-    private RadioButton listRadioButton = null;
-    int listIndex = -1;
     // It holds the list of Blacklist objects fetched from Database
     public static RealmResults<Blacklist> blockList;
+    private static final String PHONE_NUMBER = ContactsContract.CommonDataKinds.Phone.NUMBER;
     public final static int MY_PERMISSIONS_REQUEST_READ_PHONE_STATE = 11;
     private static final String TAG = "CallBlockActivity";
 
@@ -69,12 +77,8 @@ public class CallBlockActivity extends AppCompatActivity
         mTitle = mDrawerTitle = getTitle();
         menuTitles = getResources().getStringArray(R.array.menu_items);
         mDrawerLayout = (DrawerLayout) findViewById(R.id.drawer_layout);
-        mDrawerList = (ListView) findViewById(R.id.left_drawer);
-        mDrawerList.setAdapter(new ArrayAdapter<String>(this,
-                R.layout.drawer_list_item, menuTitles));
-        mDrawerList.setOnItemClickListener(new DrawerItemClickListener());
-        // ActionBarDrawerToggle ties together the the proper interactions
-        // between the sliding drawer and the action bar app icon
+        mNavView = findViewById(R.id.navigation);
+        mNavView.setNavigationItemSelectedListener(this);
         mDrawerToggle = new ActionBarDrawerToggle(
                 this,                  /* host Activity */
                 mDrawerLayout,         /* DrawerLayout object */
@@ -121,7 +125,7 @@ public class CallBlockActivity extends AppCompatActivity
         if (ContextCompat.checkSelfPermission(getApplicationContext(),
                 Manifest.permission.READ_PHONE_STATE) + ContextCompat
                 .checkSelfPermission(getApplicationContext(),
-                        Manifest.permission.CAMERA)
+                        Manifest.permission.READ_CONTACTS)
                 != PackageManager.PERMISSION_GRANTED) {
 
             // Should we show an explanation?
@@ -129,9 +133,10 @@ public class CallBlockActivity extends AppCompatActivity
                     Manifest.permission.READ_CONTACTS)) {
             } else {
                 ActivityCompat.requestPermissions(this,
-                        new String[]{Manifest.permission.READ_PHONE_STATE, Manifest.permission.CALL_PHONE },
+                        new String[]{Manifest.permission.READ_PHONE_STATE, Manifest.permission.CALL_PHONE, Manifest.permission.READ_CONTACTS },
                         MY_PERMISSIONS_REQUEST_READ_PHONE_STATE);
             }
+            getContact();
     }
 }
 
@@ -210,7 +215,7 @@ public class CallBlockActivity extends AppCompatActivity
         }
         // if number checks out then add to list
         if (newNumber.length() == 10 && !currNumber.equals("")) {
-            editBlackList(newNumber);
+            editBlackList(currNumber, newNumber);
         } else {
             // TODO CREATE DIALOG THAT ASKS TO TRY AGAIN
             Toast.makeText(this, "Phone Number is Invalid", Toast.LENGTH_LONG).show();
@@ -224,20 +229,6 @@ public class CallBlockActivity extends AppCompatActivity
     @Override
     public void onEditDialogNegativeClick(DialogFragment dialog) {
 
-    }
-
-    /* The click listener for ListView in the navigation drawer */
-    private class DrawerItemClickListener implements ListView.OnItemClickListener {
-        @Override
-        public void onItemClick(AdapterView<?> parent, View view, int position, long id) {
-           selectItem(position);
-           onRadioButtonClicked(view);
-        }
-    }
-
-    private void selectItem(int position) {
-        RadioButton radioButton = (RadioButton) mDrawerList.getAdapter().getItem(position);
-        Log.d(TAG, radioButton.getText().toString());
     }
 
     @Override
@@ -255,7 +246,7 @@ public class CallBlockActivity extends AppCompatActivity
             @Override
             public void execute(Realm realm) {
                 Blacklist blacklist = new Blacklist();
-                blacklist.setId(currCount+"");
+                blacklist.setId(hashCode()+"");
                 blacklist.setPhoneNumber(phoneNumber);
                 realm.insert(blacklist);
                 currCount++;
@@ -271,19 +262,23 @@ public class CallBlockActivity extends AppCompatActivity
         blackListDb.executeTransactionAsync(new Realm.Transaction() {
             @Override
             public void execute(Realm realm) {
-                realm.where(Blacklist.class).equalTo("id", currClicked+"")
-                        .findFirst()
-                        .deleteFromRealm();
+                Blacklist blacklist = realm.where(Blacklist.class).equalTo("phoneNumber", phoneNumber)
+                        .findFirst();
+                if (blacklist != null) {
+                    realm.where(Blacklist.class).equalTo("phoneNumber", phoneNumber)
+                            .findFirst()
+                            .deleteFromRealm();
+                }
                 currCount--;
             }
         });
     }
-    void editBlackList(final String newNumber) {
+    void editBlackList(final String currNumber, final String newNumber) {
         blackListDb.executeTransactionAsync(new Realm.Transaction() {
             @Override
             public void execute(Realm realm) {
                 Blacklist blacklist = realm.where(Blacklist.class)
-                        .equalTo("id", currClicked+"")
+                        .equalTo("phoneNumber", currNumber)
                         .findFirst();
                 if (blacklist != null) {
                     blacklist.setPhoneNumber(newNumber);
@@ -302,7 +297,7 @@ public class CallBlockActivity extends AppCompatActivity
                 if (grantResults.length > 0
                         && grantResults[0] == PackageManager.PERMISSION_GRANTED
                         && grantResults[1] == PackageManager.PERMISSION_GRANTED) {
-
+                        getContact();
                 } else {
                 }
                 return;
@@ -321,29 +316,6 @@ public class CallBlockActivity extends AppCompatActivity
     {
         super.onConfigurationChanged(newConfig);
         mDrawerToggle.onConfigurationChanged(newConfig);
-    }
-    /**
-     * This Handles the event when the user toggles the radio buttons
-     * @param view
-     */
-    public void onRadioButtonClicked(View view) {
-        // Is the button now checked?
-        boolean checked = ((RadioButton) view).isChecked();
-        // Check which radio button was clicked
-        switch(((RadioButton) view).getText().toString()) {
-            case "Block All Calls":
-                CallBlockPreferences.setStoredBlockType(this, "all");
-                Log.d(TAG, "all");
-                break;
-            case "Block Blacklisted Numbers":
-                CallBlockPreferences.setStoredBlockType(this, "blacklist");
-                Log.d(TAG, "blacklist will be blocked");
-                break;
-            case "Block All Unsaved Contacts":
-                CallBlockPreferences.setStoredBlockType(this, "cancel");
-                Log.d(TAG, "blacklist will be blocked");
-                break;
-        }
     }
     private void showDialog()
     {
@@ -380,7 +352,7 @@ public class CallBlockActivity extends AppCompatActivity
     }
     private void showEditDialog()
     {
-        // After submission, Dialog opens up with "Success" message. So, build the AlartBox first
+        // After submission, Dialog opens up with "Success" message. So, build the AlertBox first
         final AlertDialog.Builder alertDialogBuilder = new AlertDialog.Builder(this);
 
         // Set the appropriate message into it.
@@ -411,4 +383,69 @@ public class CallBlockActivity extends AppCompatActivity
         final AlertDialog alertDialog = alertDialogBuilder.create();
         alertDialog.show();
     }
-}
+
+    @Override
+    public boolean onNavigationItemSelected(@NonNull MenuItem item) {
+        if (item.isChecked()) {
+            item.setChecked(false);
+        }
+        switch (item.getItemId()) {
+            case R.id.blockAllCallsToggle:
+                CallBlockPreferences.setStoredBlockType(this, "all");
+                Toast.makeText(this, "All call will be blocked", Toast.LENGTH_SHORT).show();
+                Log.d(TAG, "all");
+            case R.id.blockBlackListToggle:
+                CallBlockPreferences.setStoredBlockType(this, "blacklist");
+                Toast.makeText(this, "Blacklist will be blocked", Toast.LENGTH_SHORT).show();
+                Log.d(TAG, "blacklist");
+            case R.id.blockCancelToggle:
+                CallBlockPreferences.setStoredBlockType(this, "cancel");
+                Toast.makeText(this, "No calls will be blocked", Toast.LENGTH_SHORT).show();
+                Log.d(TAG, "cancel");
+            case R.id.blockUnsavedToggle:
+                CallBlockPreferences.setStoredBlockType(this, "unsaved");
+                getContact();
+                Toast.makeText(this, "Unsaved Contacts will be blocked", Toast.LENGTH_SHORT).show();
+                Log.d(TAG, "cancel");
+            default:
+                mDrawerLayout.closeDrawer(GravityCompat.START);
+        }
+        return true;
+    }
+    public void getContact() {
+        // Check the SDK version and whether the permission is already granted or not.
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M && checkSelfPermission(Manifest.permission.READ_CONTACTS) != PackageManager.PERMISSION_GRANTED) {
+            requestPermissions(new String[]{Manifest.permission.READ_CONTACTS}, MY_PERMISSIONS_REQUEST_READ_PHONE_STATE);
+            //After this point you wait for callback in onRequestPermissionsResult(int, String[], int[]) overridden method
+        } else {
+            // Android version is lesser than 6.0 or the permission is already granted.
+            List<String> contacts = new ArrayList<>();
+            // Get the ContentResolver
+            ContentResolver cr = getContentResolver();
+            // Get the Cursor of all the contacts
+            Cursor cursor = cr.query(
+                    ContactsContract.CommonDataKinds.Phone.CONTENT_URI,
+                    new String[]{PHONE_NUMBER,},
+                    null,
+                    null,
+                    null
+            );
+
+            // Move the cursor to first. Also check whether the cursor is empty or not.
+            if (cursor.moveToFirst()) {
+                // Iterate through the cursor
+                do {
+                    // Get the contacts name
+                    String name = cursor.getString(cursor.getColumnIndex(PHONE_NUMBER));
+                    contacts.add(name);
+                } while (cursor.moveToNext());
+            }
+            // Close the cursor
+            cursor.close();
+            CallBlockPreferences.setContacts(contacts);
+            Log.d(TAG, contacts.toString());
+        }
+    }
+
+    }
+

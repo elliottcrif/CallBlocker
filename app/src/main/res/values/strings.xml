@@ -15,6 +15,7 @@
     <string name="close_drawer">close drawer</string>
     <string name="cancel">cancel</string>
     <string name="phone_number">Phone Number</string>
+    <string name="block_unsaved_contacts_only">Block unsaved contacts only</string>
     <string-array name="menu_items">
         <item>Block All Calls</item>
         <item>Block Blacklisted Numbers</item>

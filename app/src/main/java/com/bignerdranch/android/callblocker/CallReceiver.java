@@ -5,6 +5,7 @@ import android.content.Context;
 import android.content.Intent;
 import android.telephony.TelephonyManager;
 import android.util.Log;
+import android.widget.TabHost;
 
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
@@ -46,8 +47,13 @@ public class CallReceiver extends BroadcastReceiver {
                     } else {
                         Log.d(TAG, "Not a Telephone Call");
                     }
+                } else if (CallBlockPreferences.getStoredBlockType(context).equals("unsaved") &&
+                        !CallBlockPreferences.getContacts().contains(number)) {
+                        disconnectPhone(context);
                 } else if (CallBlockPreferences.getStoredBlockType(context).equals("all")) {
                         disconnectPhone(context);
+                } else {
+                    Log.d(TAG, "phone call went thru");
                 }
         }
         }
