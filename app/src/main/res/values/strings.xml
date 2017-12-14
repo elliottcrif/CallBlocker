@@ -13,7 +13,7 @@
     <string name="edit">Edit</string>
     <string name="open_drawer">Open drawer</string>
     <string name="close_drawer">Close drawer</string>
-    <string name="cancel">cancel</string>
+    <string name="cancel">Cancel</string>
     <string name="phone_number">Phone Number</string>
     <string name="block_unsaved_contacts_only">Block Unsaved Contacts only</string>
     <string-array name="menu_items">

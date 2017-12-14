@@ -138,6 +138,9 @@ public class CallBlockActivity extends AppCompatActivity
             }
             getContact();
     }
+        if (currCount == 0) {
+            showEmptyDialog();
+        }
 }
 
     @Override
@@ -358,6 +361,39 @@ public class CallBlockActivity extends AppCompatActivity
         final AlertDialog alertDialog = alertDialogBuilder.create();
         alertDialog.show();
     }
+    private void showEmptyDialog()
+    {
+        // After submission, Dialog opens up with "Success" message. So, build the AlartBox first
+        final AlertDialog.Builder alertDialogBuilder = new AlertDialog.Builder(this);
+
+        // Set the appropriate message into it.
+        alertDialogBuilder.setMessage("Your blackList is empty. Add a number?");
+
+        // Add a positive button and it's action. In our case action would be, just hide the dialog box ,
+        // and erase the user inputs.
+        alertDialogBuilder.setPositiveButton("Add Number",
+                new DialogInterface.OnClickListener() {
+
+                    @Override
+                    public void onClick(DialogInterface arg0, int arg1) {
+                        DialogFragment newFragment = new AddNumberDialog();
+                        newFragment.show(getSupportFragmentManager(), "number");
+                    }
+                });
+
+        // Add a negative button and it's action. In our case, close the current screen
+        alertDialogBuilder.setNegativeButton("Cancel",
+                new DialogInterface.OnClickListener() {
+                    @Override
+                    public void onClick(DialogInterface dialog, int which) {
+
+                    }
+                });
+
+        // Now, create the Dialog and show it.
+        final AlertDialog alertDialog = alertDialogBuilder.create();
+        alertDialog.show();
+    }
     private void showEditDialog()
     {
         // After submission, Dialog opens up with "Success" message. So, build the AlertBox first
@@ -448,8 +484,9 @@ public class CallBlockActivity extends AppCompatActivity
                 // Iterate through the cursor
                 do {
                     // Get the contacts name
-                    String name = cursor.getString(cursor.getColumnIndex(PHONE_NUMBER));
-                    contacts.add(name);
+                    String number = cursor.getString(cursor.getColumnIndex(PHONE_NUMBER));
+                    number = number.replaceAll("[()\\s-]+", "");
+                    contacts.add(number);
                 } while (cursor.moveToNext());
             }
             // Close the cursor
