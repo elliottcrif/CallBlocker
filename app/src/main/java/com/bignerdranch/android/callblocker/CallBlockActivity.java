@@ -152,18 +152,24 @@ public class CallBlockActivity extends AppCompatActivity
     public boolean onOptionsItemSelected(MenuItem item) {
         switch(item.getItemId()) {
             case R.id.delete_menu_item:
-                Toast.makeText(getBaseContext(), "Clicked", Toast.LENGTH_LONG).show();
                 BlackListAdapter blackListAdapter = (BlackListAdapter) blackList.getAdapter();
-                Blacklist blacklist = blackListAdapter.getItem(currClicked);
-                if (blacklist != null) {
+                int count = blackListAdapter.getCount();
+                Blacklist blacklist = null;
+                if (count > currClicked) { // check if in range
+                    blacklist = blackListAdapter.getItem(currClicked);
+                }
+                if (blacklist != null) { // if not null try to delete
                     Log.d(TAG, blacklist.getPhoneNumber());
                     deleteBlackList(blacklist.getPhoneNumber());
-
                 }
                 return true;
             case R.id.add_menu_item:
                 DialogFragment newFragment = new AddNumberDialog();
                 newFragment.show(getSupportFragmentManager(), "number");
+                return true;
+            case R.id.open_menu_item:
+                mDrawerLayout.openDrawer(mNavView);
+                return true;
             default:
                 return super.onOptionsItemSelected(item);
         }
@@ -185,6 +191,8 @@ public class CallBlockActivity extends AppCompatActivity
         } else {
             // TODO CREATE DIALOG THAT ASKS TO TRY AGAIN
             Toast.makeText(this, "Phone Number is Invalid", Toast.LENGTH_LONG).show();
+            DialogFragment newFragment = new AddNumberDialog();
+            newFragment.show(getSupportFragmentManager(), "number");
         }
 
     }
@@ -394,19 +402,23 @@ public class CallBlockActivity extends AppCompatActivity
                 CallBlockPreferences.setStoredBlockType(this, "all");
                 Toast.makeText(this, "All call will be blocked", Toast.LENGTH_SHORT).show();
                 Log.d(TAG, "all");
+                return true;
             case R.id.blockBlackListToggle:
                 CallBlockPreferences.setStoredBlockType(this, "blacklist");
                 Toast.makeText(this, "Blacklist will be blocked", Toast.LENGTH_SHORT).show();
                 Log.d(TAG, "blacklist");
+                return true;
             case R.id.blockCancelToggle:
                 CallBlockPreferences.setStoredBlockType(this, "cancel");
                 Toast.makeText(this, "No calls will be blocked", Toast.LENGTH_SHORT).show();
                 Log.d(TAG, "cancel");
+                return true;
             case R.id.blockUnsavedToggle:
                 CallBlockPreferences.setStoredBlockType(this, "unsaved");
                 getContact();
                 Toast.makeText(this, "Unsaved Contacts will be blocked", Toast.LENGTH_SHORT).show();
-                Log.d(TAG, "cancel");
+                Log.d(TAG, "unsaved");
+                return true;
             default:
                 mDrawerLayout.closeDrawer(GravityCompat.START);
         }

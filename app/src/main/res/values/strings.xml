@@ -4,18 +4,18 @@
     <string name="show_blacklist">Show BlackList</string>
     <string name="title_activity_add_black">AddBlack</string>
     <string name="enter_number">Enter Phone Number</string>
-    <string name="delete">delete</string>
+    <string name="delete">Delete</string>
     <string name="block_all_calls">Block All Calls</string>
     <string name="block_black_list_only">Block Black List Only</string>
     <string name="call_block_settings">Call Block Settings</string>
     <string name="cancel_all_blocks">Cancel All Blocks</string>
     <string name="settings">Settings</string>
     <string name="edit">Edit</string>
-    <string name="open_drawer">open drawer</string>
-    <string name="close_drawer">close drawer</string>
+    <string name="open_drawer">Open drawer</string>
+    <string name="close_drawer">Close drawer</string>
     <string name="cancel">cancel</string>
     <string name="phone_number">Phone Number</string>
-    <string name="block_unsaved_contacts_only">Block unsaved contacts only</string>
+    <string name="block_unsaved_contacts_only">Block Unsaved Contacts only</string>
     <string-array name="menu_items">
         <item>Block All Calls</item>
         <item>Block Blacklisted Numbers</item>
